@@ -1,0 +1,37 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+
+class CSimulation
+class CRender
+class CWorld
+class CLoopReader
+
+class CRobot
+class CWallFollower
+
+class CWheel
+class CRangeSensor
+class CTrail
+
+CRobot <|-- CWallFollower
+
+CSimulation *-- CRender
+CSimulation *-- CWorld
+CSimulation *-- CWallFollower
+
+CRobot *-- CWheel
+CRobot *-- CTrail
+
+CWallFollower *-- CRangeSensor
+
+CWorld *-- CLoopReader
+
+CWallFollower --> CWorld
+CRangeSensor --> CWorld
+
+CRobot --> CRender
+CWorld --> CRender
+CTrail --> CRender
+
+@enduml
