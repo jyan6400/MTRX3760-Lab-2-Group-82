@@ -103,7 +103,9 @@ MTRX3760-Lab-2/
 └── README.md
 
 
+----
 
+**# UML Diagram**
 
 @startuml
 skinparam classAttributeIconSize 0
@@ -143,10 +145,7 @@ CTrail --> CRender
 
 @enduml
 
-
-
-
-## Team Responsibilities
+**## Team Responsibilities**
 
 | Area | Person 1 - Robot, Control & Simulation | Person 2 - World, Sensors & Rendering |
 |---|---|---|
