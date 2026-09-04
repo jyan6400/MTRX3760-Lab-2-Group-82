@@ -1,0 +1,44 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+
+class CSimulation
+class CRender
+class CMap
+class CLoopReader
+class CRobot
+class CWallFollower
+class CWheel
+class CRangeSensor
+class CTrail
+
+CRobot <|-- CWallFollower
+
+'Each update advances the simulation 
+'by a fixed amount of simulated time.
+CSimulation *-- CRender
+CSimulation *-- CMap
+
+'Each time the robot collides with a wall, 
+'the collision is reported to the console.
+CSimulation *-- CWallFollower
+
+'The robot is driven by two independently 
+'controlled wheels, one either side.
+CRobot "1" *-- "2" CWheel
+
+'The robot carries exactly two range sensors
+CRobot "1" *-- "2" CRangeSensor
+
+'The robot leaves a trail behind it showing its trajectory, 
+'and the trail remains visible for the whole run.
+CRobot *-- CTrail
+
+CMap..> CLoopReader
+CWallFollower ..> CMap
+CRangeSensor ..> CMap
+CRobot ..> CRender
+CMap ..> CRender
+CTrail ..> CRender
+
+@enduml
