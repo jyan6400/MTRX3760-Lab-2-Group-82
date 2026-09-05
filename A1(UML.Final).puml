@@ -27,8 +27,9 @@ CSimulation *-- CWallFollower
 'controlled wheels, one either side.
 CRobot "1" *-- "2" CWheel
 
-'The robot carries exactly two range sensors
-CRobot "1" *-- "2" CRangeSensor
+'The robot (Wallfollower is inherited from robot)
+'carries exactly two range sensors
+CWallFollower "1" *-- "2" CRangeSensor
 
 'The robot leaves a trail behind it showing its trajectory, 
 'and the trail remains visible for the whole run.
