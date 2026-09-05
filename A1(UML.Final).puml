@@ -34,11 +34,11 @@ CRobot "1" *-- "2" CRangeSensor
 'and the trail remains visible for the whole run.
 CRobot *-- CTrail
 
-CMap..> CLoopReader
-CWallFollower ..> CMap
-CRangeSensor ..> CMap
-CRobot ..> CRender
-CMap ..> CRender
-CTrail ..> CRender
+CMap --> CLoopReader
+CWallFollower --> CMap
+CRangeSensor --> CMap
+CRobot --> CRender
+CMap --> CRender
+CTrail --> CRender
 
 @enduml
