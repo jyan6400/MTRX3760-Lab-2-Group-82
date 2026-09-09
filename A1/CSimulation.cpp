@@ -1,27 +1,40 @@
-#include <iostream>
-#include "CSimulation.hpp"
+#include "CSimulation.h"
 
-CSimulation::CSimulation( const std::string& aFilename )
-  : mMap(),
-    mRobot( mMap )
+#include <iostream>
+
+CSimulation::CSimulation(
+    const std::string& aFilename )
+    :
+        mMap(),
+        mRobot( mMap )
 {
-    bool Loaded = mMap.Load( aFilename );
-    if( Loaded )
+    mMapLoaded =
+        mMap.Load( aFilename );
+
+    if( mMapLoaded )
     {
-        mRobot.SetPose( mMap.GetStartPose() );
+        mRobot.SetPose(
+            mMap.GetStartPose() );
     }
     else
     {
-        std::cout << "CSimulation: failed to load map '" << aFilename << "'" << std::endl;
+        std::cout
+            << "CSimulation: failed to load map '"
+            << aFilename
+            << "'"
+            << std::endl;
     }
 }
 
 void CSimulation::Run()
 {
-    while( !mRender.WindowShouldClose() )
+    if( mMapLoaded )
     {
-        Update( mFixedDt );
-        Render();
+        while( !mRender.WindowShouldClose() )
+        {
+            Update( mFixedDt );
+            Render();
+        }
     }
 
     mRender.CloseWindow();
@@ -31,19 +44,29 @@ void CSimulation::Run()
 void CSimulation::Update( float aDt )
 {
     mRobot.Update( aDt );
+
     ++mTotalUpdates;
 }
 
 void CSimulation::Render()
 {
     mRender.BeginDrawing();
+
     mMap.Draw( mRender );
     mRobot.Draw( mRender );
+
     mRender.EndDrawing();
 }
 
 void CSimulation::Report() const
 {
-    std::cout << "Total updates: " << mTotalUpdates << std::endl;
-    std::cout << "Total collisions: " << mRobot.GetCollisionCount() << std::endl;
+    std::cout
+        << "Total updates: "
+        << mTotalUpdates
+        << std::endl;
+
+    std::cout
+        << "Total collisions: "
+        << mRobot.GetCollisionCount()
+        << std::endl;
 }

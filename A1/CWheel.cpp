@@ -1,4 +1,4 @@
-#include "CWheel.hpp"
+#include "CWheel.h"
 
 void CWheel::SetSpeed( float aSpeed )
 {

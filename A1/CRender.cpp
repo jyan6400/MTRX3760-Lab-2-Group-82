@@ -1,21 +1,18 @@
-//-----------------------------------------------------------------------------
-// CRender.cpp
-//
-// Implementation of the raylib wrapper. The :: prefix on the raylib calls says
-// "the global one", distinguishing raylib's DrawCircle from our member function
-// of the same name.
-//-----------------------------------------------------------------------------
-
 #include "CRender.h"
 
-//-----------------------------------------------------------------------------
+#include "raylib.h"
+
 CRender::CRender()
     :
         mScreenWidth( 800 ),
         mScreenHeight( 600 )
 {
-    InitWindow( mScreenWidth, mScreenHeight, "TODO: Replace This Text" );
-    SetTargetFPS( 60 );
+    ::InitWindow(
+        mScreenWidth,
+        mScreenHeight,
+        "MTRX3760 Lab 2 - Wall Follower" );
+
+    ::SetTargetFPS( 60 );
 }
 
 int CRender::GetScreenWidth() const
@@ -30,7 +27,9 @@ int CRender::GetScreenHeight() const
 
 bool CRender::WindowShouldClose()
 {
-    bool Result = ::WindowShouldClose();
+    bool Result =
+        ::WindowShouldClose();
+
     return Result;
 }
 
@@ -50,15 +49,99 @@ void CRender::EndDrawing()
     ::EndDrawing();
 }
 
-void CRender::DrawCircle( Vec2D aPosition, int aRadius, Color aColor )
+CRender::SColourComponents CRender::GetColourComponents(
+    EColour aColour ) const
 {
-    ::DrawCircle( aPosition.x, aPosition.y, aRadius, aColor );
+    // White is the default.
+    SColourComponents Result
+    {
+        255,
+        255,
+        255,
+        255
+    };
+
+    if( aColour == COLOUR_BLUE )
+    {
+        Result =
+            SColourComponents
+            {
+                0,
+                121,
+                241,
+                255
+            };
+    }
+    else if( aColour == COLOUR_GREY )
+    {
+        Result =
+            SColourComponents
+            {
+                130,
+                130,
+                130,
+                255
+            };
+    }
+
+    return Result;
 }
 
-void CRender::DrawLine( Vec2D aStart, Vec2D aEnd, float aThickness, Color aColor )
+void CRender::DrawCircle(
+    Vec2D aPosition,
+    int aRadius,
+    EColour aColour )
 {
-    Vector2 Start = { aStart.x, aStart.y };
-    Vector2 End = { aEnd.x, aEnd.y };
+    SColourComponents Components =
+        GetColourComponents( aColour );
 
-    ::DrawLineEx( Start, End, aThickness, aColor );
+    Color RayColour
+    {
+        Components.r,
+        Components.g,
+        Components.b,
+        Components.a
+    };
+
+    ::DrawCircle(
+        aPosition.x,
+        aPosition.y,
+        aRadius,
+        RayColour );
+}
+
+void CRender::DrawLine(
+    Vec2D aStart,
+    Vec2D aEnd,
+    float aThickness,
+    EColour aColour )
+{
+    SColourComponents Components =
+        GetColourComponents( aColour );
+
+    Color RayColour
+    {
+        Components.r,
+        Components.g,
+        Components.b,
+        Components.a
+    };
+
+    Vector2 Start
+    {
+        aStart.x,
+        aStart.y
+    };
+
+    Vector2 End
+    {
+        aEnd.x,
+        aEnd.y
+    };
+
+    ::DrawLineEx(
+        Start,
+        End,
+        aThickness,
+        RayColour );
 }

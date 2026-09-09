@@ -1,17 +1,16 @@
-#include <cmath>
-#include <iostream>
-#include "CWallFollower.hpp"
+#include "CWallFollower.h"
 
-const float Pi = 3.14159265f;
-const float HalfCircle = 180.0f;
-const float kDegreesToRadians = Pi / HalfCircle;
+#include <iostream>
 
 CWallFollower::CWallFollower( const CMap& arMap )
     :
         mMap( arMap )
 {
-    mSensors[0].Mount( 90.0f * kDegreesToRadians );   // straight right
-    mSensors[1].Mount( 45.0f * kDegreesToRadians );   // forward-right
+    mSensors[SENSOR_RIGHT].Mount(
+        mRightSensorAngle );
+
+    mSensors[SENSOR_FORWARD_RIGHT].Mount(
+        mForwardRightSensorAngle );
 }
 
 void CWallFollower::Update( float aDt )
@@ -23,34 +22,55 @@ void CWallFollower::Update( float aDt )
 
 void CWallFollower::Steer()
 {
-    // Obtain the distance of the wall measured by the two sensors
-    float RightDistance = mSensors[0].GetDistance( GetPose().mPosition, GetPose().mHeading, mMap );
-    float FrontDistance = mSensors[1].GetDistance( GetPose().mPosition, GetPose().mHeading, mMap );
+    float RightDistance =
+        mSensors[SENSOR_RIGHT].GetDistance(
+            GetPose().mPosition,
+            GetPose().mHeading,
+            mMap );
 
-    // Calculate the deviation of the distance on the right side
-    float Error = RightDistance - mTargetWallDistance;
-    
-    // Calculate the steering deflection based on the deviation
-    float TurnRate = mKp * Error;
+    float ForwardRightDistance =
+        mSensors[SENSOR_FORWARD_RIGHT].GetDistance(
+            GetPose().mPosition,
+            GetPose().mHeading,
+            mMap );
 
-    // Turn when it's close to the wall
-    if( FrontDistance < mFrontThreshold )
+    // Positive error means the robot is too far from the right wall.
+    float Error =
+        RightDistance - mTargetWallDistance;
+
+    float TurnRate =
+        mKp * Error;
+
+    // Add stronger corner avoidance when the forward-right sensor sees
+    // a wall inside its threshold.
+    if( ForwardRightDistance < mForwardRightThreshold )
     {
-        TurnRate -= mKTurn * ( mFrontThreshold - FrontDistance );
+        TurnRate -=
+            mKTurn
+            * ( mForwardRightThreshold - ForwardRightDistance );
     }
 
-    mWheels[0].SetSpeed( mBaseSpeed - TurnRate );   // left wheel
-    mWheels[1].SetSpeed( mBaseSpeed + TurnRate );   // right wheel
+    SetWheelSpeeds(
+        mBaseSpeed - TurnRate,
+        mBaseSpeed + TurnRate );
 }
 
 void CWallFollower::CheckCollision()
 {
-    bool IsColliding = mMap.CheckCollision( GetPose().mPosition, GetRadius() );
+    bool IsColliding =
+        mMap.CheckCollision(
+            GetPose().mPosition,
+            GetRadius() );
 
     if( IsColliding && !mWasColliding )
     {
         ++mCollisionCount;
-        std::cout << "CWallFollower: collision detected (total " << mCollisionCount << ")" << std::endl;
+
+        std::cout
+            << "CWallFollower: collision detected (total "
+            << mCollisionCount
+            << ")"
+            << std::endl;
     }
 
     mWasColliding = IsColliding;

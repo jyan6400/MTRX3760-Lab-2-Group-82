@@ -1,5 +1,6 @@
+#include "CRobot.h"
+
 #include <cmath>
-#include "CRobot.hpp"
 
 void CRobot::SetPose( const CPose& aPose )
 {
@@ -16,41 +17,58 @@ float CRobot::GetRadius() const
     return mRadius;
 }
 
+void CRobot::SetWheelSpeeds(
+    float aLeftSpeed,
+    float aRightSpeed )
+{
+    mWheels[WHEEL_LEFT].SetSpeed( aLeftSpeed );
+    mWheels[WHEEL_RIGHT].SetSpeed( aRightSpeed );
+}
+
 void CRobot::Move( float aDt )
 {
-    // Read the current speed
-    float LeftSpeed  = mWheels[0].GetSpeed();
-    float RightSpeed = mWheels[1].GetSpeed();
+    float LeftSpeed = mWheels[WHEEL_LEFT].GetSpeed();
+    float RightSpeed = mWheels[WHEEL_RIGHT].GetSpeed();
 
-    float LinearVelocity  = ( LeftSpeed + RightSpeed ) / 2.0f;
-    float AngularVelocity = ( RightSpeed - LeftSpeed ) / mWheelBase;
+    float LinearVelocity =
+        ( LeftSpeed + RightSpeed ) / 2.0f;
 
-    // Update the heading angle
+    float AngularVelocity =
+        ( RightSpeed - LeftSpeed ) / mWheelBase;
+
     mPose.mHeading += AngularVelocity * aDt;
 
-    // Update the coordinate according to the new direction
-    mPose.mPosition.x += LinearVelocity * std::cos( mPose.mHeading ) * aDt;
-    mPose.mPosition.y += LinearVelocity * std::sin( mPose.mHeading ) * aDt;
+    mPose.mPosition.x +=
+        LinearVelocity * std::cos( mPose.mHeading ) * aDt;
 
-    // Record the latest position to the Trail list
+    mPose.mPosition.y +=
+        LinearVelocity * std::sin( mPose.mHeading ) * aDt;
+
     mTrail.AddPoint( mPose.mPosition );
 }
 
 void CRobot::Draw( CRender& aRender ) const
 {
-    const float HeadingLineLength = mRadius;
-    const float HeadingLineThickness = 2.0f;
-
-    // Draw the 
+    // Draw the permanent trajectory before drawing the robot.
     mTrail.Draw( aRender );
 
-    aRender.DrawCircle( mPose.mPosition, (int)mRadius, BLUE );
+    aRender.DrawCircle(
+        mPose.mPosition,
+        (int)mRadius,
+        CRender::COLOUR_BLUE );
 
-    // Calculate and draw the heading
     Vec2D HeadingEnd
     {
-        mPose.mPosition.x + HeadingLineLength * std::cos( mPose.mHeading ),
-        mPose.mPosition.y + HeadingLineLength * std::sin( mPose.mHeading )
+        mPose.mPosition.x
+            + mRadius * std::cos( mPose.mHeading ),
+
+        mPose.mPosition.y
+            + mRadius * std::sin( mPose.mHeading )
     };
-    aRender.DrawLine( mPose.mPosition, HeadingEnd, HeadingLineThickness, WHITE );
+
+    aRender.DrawLine(
+        mPose.mPosition,
+        HeadingEnd,
+        mHeadingLineThickness,
+        CRender::COLOUR_WHITE );
 }
