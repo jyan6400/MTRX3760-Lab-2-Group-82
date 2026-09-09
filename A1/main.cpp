@@ -1,14 +1,21 @@
-// main.cpp
-//
-// Entry point for A1. Runs the wall-following simulation using the map named
-// on the command line, or SimpleWalls.map when no filename is provided.
+/*
+ * main.cpp
+ *
+ * This file provides the entry point for the A1 wall-following simulator. It
+ * selects the requested map file, constructs the top-level CSimulation object
+ * and starts the simulation.
+ */
 
 #include "CSimulation.h"
 
 #include <string>
 
-int main( int argc, char* argv[] )
+//-----------------------------------------------------------------------------
+int main(
+    int argc,
+    char* argv[] )
 {
+    // Use the supplied A1 room unless another map is named on the command line.
     std::string Filename =
         "SimpleWalls.map";
 
@@ -18,7 +25,10 @@ int main( int argc, char* argv[] )
             argv[1];
     }
 
-    CSimulation Simulation( Filename );
+    // Simulation logic remains encapsulated inside the top-level owner rather
+    // than being implemented directly in main().
+    CSimulation Simulation(
+        Filename );
 
     Simulation.Run();
 

@@ -1,12 +1,23 @@
+/*
+ * CMap.cpp
+ *
+ * This file implements map loading, wall construction, point-to-segment
+ * distance calculations, collision detection, sensor ray intersection and
+ * room rendering for CMap.
+ */
+
 #include "CMap.h"
 
 #include <cmath>
 
+//-----------------------------------------------------------------------------
 bool CMap::Load( const std::string& aFilename )
 {
     bool Okay =
-        mLoopReader.ReadFile( aFilename );
+        mLoopReader.ReadFile(
+            aFilename );
 
+    // Do not construct geometry from an invalid map.
     if( Okay )
     {
         BuildWalls();
@@ -15,6 +26,7 @@ bool CMap::Load( const std::string& aFilename )
     return Okay;
 }
 
+//-----------------------------------------------------------------------------
 void CMap::BuildWalls()
 {
     mWalls.clear();
@@ -24,6 +36,8 @@ void CMap::BuildWalls()
 
     if( !Vertices.empty() )
     {
+        // Beginning with the final vertex automatically creates the closing
+        // segment between the final and first vertices.
         Vec2D Previous =
             Vertices.back();
 
@@ -32,16 +46,19 @@ void CMap::BuildWalls()
             mWalls.push_back(
                 { Previous, Vertex } );
 
-            Previous = Vertex;
+            Previous =
+                Vertex;
         }
     }
 }
 
+//-----------------------------------------------------------------------------
 const CPose& CMap::GetStartPose() const
 {
     return mLoopReader.GetStartPose();
 }
 
+//-----------------------------------------------------------------------------
 float CMap::PointToSegmentDistance(
     const Vec2D& aPoint,
     const Vec2D& aStart,
@@ -56,15 +73,19 @@ float CMap::PointToSegmentDistance(
     float LengthSquare =
         Dx * Dx + Dy * Dy;
 
-    float T = 0.0f;
+    float T =
+        0.0f;
 
     if( LengthSquare > 0.0f )
     {
+        // Project the point onto the infinite line containing the segment.
         T =
             ( ( aPoint.x - aStart.x ) * Dx
             + ( aPoint.y - aStart.y ) * Dy )
             / LengthSquare;
 
+        // Clamp the projection so the closest point remains on the finite
+        // segment rather than extending beyond either endpoint.
         if( T < 0.0f )
         {
             T = 0.0f;
@@ -76,28 +97,36 @@ float CMap::PointToSegmentDistance(
         }
     }
 
-    float ClosestX =
-        aStart.x + T * Dx;
+    Vec2D ClosestPoint
+    {
+        aStart.x + T * Dx,
+        aStart.y + T * Dy
+    };
 
-    float ClosestY =
-        aStart.y + T * Dy;
+    float PointDx =
+        aPoint.x - ClosestPoint.x;
 
-    float Ddx =
-        aPoint.x - ClosestX;
+    float PointDy =
+        aPoint.y - ClosestPoint.y;
 
-    float Ddy =
-        aPoint.y - ClosestY;
+    float Distance =
+        std::sqrt(
+            PointDx * PointDx
+            + PointDy * PointDy );
 
-    return std::sqrt(
-        Ddx * Ddx + Ddy * Ddy );
+    return Distance;
 }
 
+//-----------------------------------------------------------------------------
 bool CMap::CheckCollision(
     const Vec2D& aPosition,
     float aRadius ) const
 {
-    bool Collided = false;
+    bool Collided =
+        false;
 
+    // A circular robot overlaps a wall whenever the shortest distance from its
+    // centre to that segment becomes smaller than the robot radius.
     for( const Wall& W : mWalls )
     {
         if( PointToSegmentDistance(
@@ -105,13 +134,15 @@ bool CMap::CheckCollision(
                 W.mStart,
                 W.mEnd ) < aRadius )
         {
-            Collided = true;
+            Collided =
+                true;
         }
     }
 
     return Collided;
 }
 
+//-----------------------------------------------------------------------------
 float CMap::GetRayIntersection(
     const Vec2D& aStartPosition,
     float aRayAngle ) const
@@ -119,6 +150,7 @@ float CMap::GetRayIntersection(
     float ClosestDistance =
         mMaxRange;
 
+    // Unit direction vector for the sensor ray.
     Vec2D Direction
     {
         std::cos( aRayAngle ),
@@ -127,35 +159,39 @@ float CMap::GetRayIntersection(
 
     for( const Wall& W : mWalls )
     {
-        float Sx =
+        float SegmentX =
             W.mEnd.x - W.mStart.x;
 
-        float Sy =
+        float SegmentY =
             W.mEnd.y - W.mStart.y;
 
+        // A near-zero cross-product denominator means the sensor ray and wall
+        // are parallel and therefore do not have a unique intersection.
         float Denominator =
-            Direction.x * Sy
-            - Direction.y * Sx;
+            Direction.x * SegmentY
+            - Direction.y * SegmentX;
 
-        // Parallel or almost-parallel rays do not produce a useful
-        // intersection with this wall segment.
         if( std::fabs( Denominator ) > mParallelTolerance )
         {
-            float Ex =
-                W.mStart.x - aStartPosition.x;
+            float OffsetX =
+                W.mStart.x
+                - aStartPosition.x;
 
-            float Ey =
-                W.mStart.y - aStartPosition.y;
+            float OffsetY =
+                W.mStart.y
+                - aStartPosition.y;
 
-            // T is the distance along the ray.
+            // T specifies distance forward along the sensor ray.
             float T =
-                ( Ex * Sy - Ey * Sx )
+                ( OffsetX * SegmentY
+                - OffsetY * SegmentX )
                 / Denominator;
 
-            // U is the position along the finite wall segment.
+            // U specifies the intersection location along the finite wall.
+            // Values in [0,1] lie between the two wall endpoints.
             float U =
-                ( Ex * Direction.y
-                - Ey * Direction.x )
+                ( OffsetX * Direction.y
+                - OffsetY * Direction.x )
                 / Denominator;
 
             if( T >= 0.0f
@@ -163,7 +199,8 @@ float CMap::GetRayIntersection(
                 && U <= 1.0f
                 && T < ClosestDistance )
             {
-                ClosestDistance = T;
+                ClosestDistance =
+                    T;
             }
         }
     }
@@ -171,6 +208,7 @@ float CMap::GetRayIntersection(
     return ClosestDistance;
 }
 
+//-----------------------------------------------------------------------------
 void CMap::Draw( CRender& aRender ) const
 {
     for( const Wall& W : mWalls )
