@@ -1,8 +1,17 @@
+/*
+ * CWallFollower.cpp
+ *
+ * This file implements the wall-following controller and collision-event
+ * detection used by each A5 wall follower.
+ */
+
 #include "CWallFollower.h"
 
 #include <iostream>
 
-CWallFollower::CWallFollower( const CMap& arMap )
+//-----------------------------------------------------------------------------
+CWallFollower::CWallFollower(
+    const CMap& arMap )
     :
         mMap( arMap )
 {
@@ -13,13 +22,18 @@ CWallFollower::CWallFollower( const CMap& arMap )
         mForwardRightSensorAngle );
 }
 
+//-----------------------------------------------------------------------------
 void CWallFollower::Update( float aDt )
 {
     Steer();
-    Move( aDt );
+
+    Move(
+        aDt );
+
     CheckCollision();
 }
 
+//-----------------------------------------------------------------------------
 void CWallFollower::Steer()
 {
     float RightDistance =
@@ -34,20 +48,23 @@ void CWallFollower::Steer()
             GetPose().mHeading,
             mMap );
 
-    // Positive error means the robot is too far from the right wall.
+    // Positive error means the robot is farther from the right wall than the
+    // target distance; negative error means it is too close.
     float Error =
-        RightDistance - mTargetWallDistance;
+        RightDistance
+        - mTargetWallDistance;
 
     float TurnRate =
         mKp * Error;
 
-    // Add stronger corner avoidance when the forward-right sensor sees
-    // a wall inside its threshold.
+    // Increase the corrective turn when an approaching wall or corner enters
+    // the forward-right sensing threshold.
     if( ForwardRightDistance < mForwardRightThreshold )
     {
         TurnRate -=
             mKTurn
-            * ( mForwardRightThreshold - ForwardRightDistance );
+            * ( mForwardRightThreshold
+                - ForwardRightDistance );
     }
 
     SetWheelSpeeds(
@@ -55,6 +72,7 @@ void CWallFollower::Steer()
         mBaseSpeed + TurnRate );
 }
 
+//-----------------------------------------------------------------------------
 void CWallFollower::CheckCollision()
 {
     bool IsColliding =
@@ -62,6 +80,8 @@ void CWallFollower::CheckCollision()
             GetPose().mPosition,
             GetRadius() );
 
+    // Count only the transition into contact so a continuous collision is
+    // represented by one event rather than many simulation updates.
     if( IsColliding && !mWasColliding )
     {
         ++mCollisionCount;
@@ -73,9 +93,11 @@ void CWallFollower::CheckCollision()
             << std::endl;
     }
 
-    mWasColliding = IsColliding;
+    mWasColliding =
+        IsColliding;
 }
 
+//-----------------------------------------------------------------------------
 int CWallFollower::GetCollisionCount() const
 {
     return mCollisionCount;

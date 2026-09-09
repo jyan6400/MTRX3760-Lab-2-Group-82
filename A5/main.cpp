@@ -1,13 +1,18 @@
-// main.cpp
-//
-// Entry point for the A5 noise bonus. Runs 20 wall-following robots and
-// 20 line-following robots simultaneously with random starting pose and
-// wheel-movement perturbations.
+/*
+ * main.cpp
+ *
+ * This file provides the entry point for the A5 noise simulation. It
+ * constructs the top-level CSimulation using the supplied wall and line maps
+ * and starts the forty-robot experiment.
+ */
 
 #include "CSimulation.h"
 
+//-----------------------------------------------------------------------------
 int main()
 {
+    // All A5 population creation, noise generation and simulation behaviour
+    // remain encapsulated within CSimulation.
     CSimulation Simulation(
         "SimpleWalls.map",
         "SimpleLine.map" );

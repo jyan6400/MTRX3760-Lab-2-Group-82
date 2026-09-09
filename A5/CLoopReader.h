@@ -1,3 +1,10 @@
+/*
+ * CLoopReader.h
+ *
+ * This file declares the map-file reader used by the A5 simulator. It parses
+ * one named closed loop consisting of a starting pose and ordered vertices.
+ */
+
 #ifndef CLOOPREADER_H
 #define CLOOPREADER_H
 
@@ -6,33 +13,54 @@
 #include <string>
 #include <vector>
 
-// A pose consists of a two-dimensional position and a heading in radians.
+//-----------------------------------------------------------------------------
+// CPose
+//
+// CPose groups a two-dimensional world position with a heading stored in
+// radians.
+//-----------------------------------------------------------------------------
 struct CPose
 {
     Vec2D mPosition;
     float mHeading;
 };
 
-// CLoopReader reads one closed loop from a .map file and stores its name,
-// starting pose and vertices.
+//-----------------------------------------------------------------------------
+// CLoopReader
+//
+// CLoopReader parses the supplied loop-map format and stores its loop name,
+// starting pose and ordered vertices. CMap interprets the vertices as
+// simulation geometry.
+//-----------------------------------------------------------------------------
 class CLoopReader
 {
     public:
+
+        // Constructs an empty reader with a zero starting pose.
         CLoopReader();
 
-        // Loads and parses one loop file.
+        // Reads and validates one loop description from arFilename.
         bool ReadFile( const std::string& arFilename );
 
+        // Returns the parsed loop name.
         const std::string& GetName() const;
+
+        // Returns the starting pose with heading stored in radians.
         const CPose& GetStartPose() const;
+
+        // Returns the ordered vertices defining the closed loop.
         const std::vector<Vec2D>& GetVertices() const;
 
     private:
+
         std::string mName;
+
         CPose mStartPose;
+
         std::vector<Vec2D> mVertices;
 
-        // Converts headings supplied in degrees to radians.
+        // Input map headings are given in degrees while simulation calculations
+        // consistently use radians.
         const float mDegreesToRadians{ 0.01745329252f };
 };
 

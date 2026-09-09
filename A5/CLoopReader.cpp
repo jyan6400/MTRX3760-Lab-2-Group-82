@@ -1,3 +1,11 @@
+/*
+ * CLoopReader.cpp
+ *
+ * This file implements parsing of the supplied loop-map format. It accepts
+ * loop, startpose and vertex entries, ignores comments and blank lines, and
+ * reports malformed input to the console.
+ */
+
 #include "CLoopReader.h"
 
 #include <fstream>
@@ -5,6 +13,7 @@
 #include <sstream>
 #include <string>
 
+//-----------------------------------------------------------------------------
 CLoopReader::CLoopReader()
     :
         mStartPose(
@@ -12,27 +21,33 @@ CLoopReader::CLoopReader()
 {
 }
 
+//-----------------------------------------------------------------------------
 const std::string& CLoopReader::GetName() const
 {
     return mName;
 }
 
+//-----------------------------------------------------------------------------
 const CPose& CLoopReader::GetStartPose() const
 {
     return mStartPose;
 }
 
+//-----------------------------------------------------------------------------
 const std::vector<Vec2D>& CLoopReader::GetVertices() const
 {
     return mVertices;
 }
 
+//-----------------------------------------------------------------------------
 bool CLoopReader::ReadFile(
     const std::string& arFilename )
 {
-    bool Okay = true;
+    bool Okay =
+        true;
 
-    std::ifstream File( arFilename );
+    std::ifstream File(
+        arFilename );
 
     if( !File )
     {
@@ -42,28 +57,36 @@ bool CLoopReader::ReadFile(
             << "'"
             << std::endl;
 
-        Okay = false;
+        Okay =
+            false;
     }
 
     std::string Line;
-    int LineNumber = 0;
-    bool HaveLoop = false;
+
+    int LineNumber =
+        0;
+
+    bool HaveLoop =
+        false;
 
     while( Okay && std::getline( File, Line ) )
     {
         ++LineNumber;
 
-        // Remove everything from '#' onward.
+        // '#' begins a map-file comment, including trailing inline comments.
         std::string::size_type Hash =
             Line.find( '#' );
 
         if( Hash != std::string::npos )
         {
             Line =
-                Line.substr( 0, Hash );
+                Line.substr(
+                    0,
+                    Hash );
         }
 
-        std::istringstream Words( Line );
+        std::istringstream Words(
+            Line );
 
         std::string Keyword;
 
@@ -79,7 +102,8 @@ bool CLoopReader::ReadFile(
                         << " (a file describes one loop)"
                         << std::endl;
 
-                    Okay = false;
+                    Okay =
+                        false;
                 }
                 else if( !( Words >> mName ) )
                 {
@@ -88,18 +112,25 @@ bool CLoopReader::ReadFile(
                         << LineNumber
                         << std::endl;
 
-                    Okay = false;
+                    Okay =
+                        false;
                 }
                 else
                 {
-                    HaveLoop = true;
+                    HaveLoop =
+                        true;
                 }
             }
             else if( Keyword == "startpose" )
             {
-                float X = 0.0f;
-                float Y = 0.0f;
-                float HeadingDegrees = 0.0f;
+                float X =
+                    0.0f;
+
+                float Y =
+                    0.0f;
+
+                float HeadingDegrees =
+                    0.0f;
 
                 if( !( Words >> X >> Y >> HeadingDegrees ) )
                 {
@@ -108,7 +139,8 @@ bool CLoopReader::ReadFile(
                         << LineNumber
                         << std::endl;
 
-                    Okay = false;
+                    Okay =
+                        false;
                 }
                 else if( !HaveLoop )
                 {
@@ -117,7 +149,8 @@ bool CLoopReader::ReadFile(
                         << LineNumber
                         << std::endl;
 
-                    Okay = false;
+                    Okay =
+                        false;
                 }
                 else
                 {
@@ -132,8 +165,11 @@ bool CLoopReader::ReadFile(
             }
             else if( Keyword == "vertex" )
             {
-                float X = 0.0f;
-                float Y = 0.0f;
+                float X =
+                    0.0f;
+
+                float Y =
+                    0.0f;
 
                 if( !( Words >> X >> Y ) )
                 {
@@ -142,7 +178,8 @@ bool CLoopReader::ReadFile(
                         << LineNumber
                         << std::endl;
 
-                    Okay = false;
+                    Okay =
+                        false;
                 }
                 else if( !HaveLoop )
                 {
@@ -151,7 +188,8 @@ bool CLoopReader::ReadFile(
                         << LineNumber
                         << std::endl;
 
-                    Okay = false;
+                    Okay =
+                        false;
                 }
                 else
                 {
@@ -168,7 +206,8 @@ bool CLoopReader::ReadFile(
                     << LineNumber
                     << std::endl;
 
-                Okay = false;
+                Okay =
+                    false;
             }
         }
     }

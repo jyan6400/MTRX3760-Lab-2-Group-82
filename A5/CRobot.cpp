@@ -1,26 +1,40 @@
+/*
+ * CRobot.cpp
+ *
+ * This file implements common robot movement, rendering and A5 wheel-movement
+ * noise. Each wheel's nominal travel can be independently perturbed during
+ * every fixed simulation update.
+ */
+
 #include "CRobot.h"
 
 #include <cmath>
 #include <cstdlib>
 
+//-----------------------------------------------------------------------------
 void CRobot::SetPose( const CPose& aPose )
 {
-    mPose = aPose;
+    mPose =
+        aPose;
 }
 
+//-----------------------------------------------------------------------------
 const CPose& CRobot::GetPose() const
 {
     return mPose;
 }
 
+//-----------------------------------------------------------------------------
 float CRobot::GetRadius() const
 {
     return mRadius;
 }
 
-void CRobot::EnableMovementNoise(
-    float aNoiseFraction )
+//-----------------------------------------------------------------------------
+void CRobot::EnableMovementNoise( float aNoiseFraction )
 {
+    // Negative noise magnitudes are invalid and therefore leave the existing
+    // noise configuration unchanged.
     if( aNoiseFraction >= 0.0f )
     {
         mMovementNoiseFraction =
@@ -31,8 +45,8 @@ void CRobot::EnableMovementNoise(
     }
 }
 
-float CRobot::RandomOffset(
-    float aMagnitude ) const
+//-----------------------------------------------------------------------------
+float CRobot::RandomOffset( float aMagnitude ) const
 {
     float UnitRandom =
         float( std::rand() )
@@ -45,6 +59,7 @@ float CRobot::RandomOffset(
     return Offset;
 }
 
+//-----------------------------------------------------------------------------
 void CRobot::SetWheelSpeeds(
     float aLeftSpeed,
     float aRightSpeed )
@@ -56,9 +71,11 @@ void CRobot::SetWheelSpeeds(
         aRightSpeed );
 }
 
+//-----------------------------------------------------------------------------
 void CRobot::Move( float aDt )
 {
-    // Calculate how far each wheel would travel during this timestep.
+    // Convert each commanded wheel speed into the nominal distance that wheel
+    // would travel during this fixed simulation timestep.
     float LeftDistance =
         mWheels[WHEEL_LEFT].GetSpeed()
         * aDt;
@@ -67,8 +84,9 @@ void CRobot::Move( float aDt )
         mWheels[WHEEL_RIGHT].GetSpeed()
         * aDt;
 
-    // A5 adds an independent random perturbation to the distance travelled
-    // by each wheel during every simulation update.
+    // A5 requires noise in how far each wheel actually turns, rather than in
+    // the controller command itself. Each wheel therefore receives its own
+    // independent random multiplicative perturbation on every update.
     if( mMovementNoiseEnabled )
     {
         LeftDistance *=
@@ -82,6 +100,8 @@ void CRobot::Move( float aDt )
                 mMovementNoiseFraction );
     }
 
+    // Average wheel travel gives centre translation, while the difference in
+    // wheel travel gives the change in robot heading.
     float LinearDistance =
         ( LeftDistance + RightDistance )
         / 2.0f;
@@ -101,12 +121,14 @@ void CRobot::Move( float aDt )
         LinearDistance
         * std::sin( mPose.mHeading );
 
+    // Recording every movement update makes the A5 spread of trajectories
+    // visible for the complete run.
     mTrail.AddPoint(
         mPose.mPosition );
 }
 
-void CRobot::Draw(
-    CRender& aRender ) const
+//-----------------------------------------------------------------------------
+void CRobot::Draw( CRender& aRender ) const
 {
     mTrail.Draw(
         aRender );

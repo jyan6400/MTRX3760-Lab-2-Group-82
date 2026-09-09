@@ -1,7 +1,16 @@
+/*
+ * CRender.cpp
+ *
+ * This file implements graphics, input and screenshot capture for A5. It is
+ * intentionally the only file that includes raylib.h or directly uses raylib
+ * types, constants and functions.
+ */
+
 #include "CRender.h"
 
 #include "raylib.h"
 
+//-----------------------------------------------------------------------------
 CRender::CRender()
     :
         mScreenWidth( 800 ),
@@ -12,19 +21,23 @@ CRender::CRender()
         mScreenHeight,
         "MTRX3760 Lab 2 - A5 Noise Simulation" );
 
-    ::SetTargetFPS( 60 );
+    ::SetTargetFPS(
+        60 );
 }
 
+//-----------------------------------------------------------------------------
 int CRender::GetScreenWidth() const
 {
     return mScreenWidth;
 }
 
+//-----------------------------------------------------------------------------
 int CRender::GetScreenHeight() const
 {
     return mScreenHeight;
 }
 
+//-----------------------------------------------------------------------------
 bool CRender::WindowShouldClose()
 {
     bool Result =
@@ -33,11 +46,30 @@ bool CRender::WindowShouldClose()
     return Result;
 }
 
+//-----------------------------------------------------------------------------
+bool CRender::ScreenshotRequested() const
+{
+    bool Result =
+        ::IsKeyPressed( KEY_S );
+
+    return Result;
+}
+
+//-----------------------------------------------------------------------------
+void CRender::SaveScreenshot(
+    const char* aFilename ) const
+{
+    ::TakeScreenshot(
+        aFilename );
+}
+
+//-----------------------------------------------------------------------------
 void CRender::CloseWindow()
 {
     ::CloseWindow();
 }
 
+//-----------------------------------------------------------------------------
 void CRender::BeginDrawing()
 {
     ::BeginDrawing();
@@ -46,11 +78,13 @@ void CRender::BeginDrawing()
         BLACK );
 }
 
+//-----------------------------------------------------------------------------
 void CRender::EndDrawing()
 {
     ::EndDrawing();
 }
 
+//-----------------------------------------------------------------------------
 CRender::SColourComponents CRender::GetColourComponents(
     EColour aColour ) const
 {
@@ -88,6 +122,7 @@ CRender::SColourComponents CRender::GetColourComponents(
     return Result;
 }
 
+//-----------------------------------------------------------------------------
 void CRender::DrawCircle(
     Vec2D aPosition,
     int aRadius,
@@ -112,6 +147,7 @@ void CRender::DrawCircle(
         RayColour );
 }
 
+//-----------------------------------------------------------------------------
 void CRender::DrawLine(
     Vec2D aStart,
     Vec2D aEnd,

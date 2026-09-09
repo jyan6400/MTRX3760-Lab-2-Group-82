@@ -1,5 +1,13 @@
+/*
+ * CLineFollower.cpp
+ *
+ * This file implements the two-sensor line-following controller used by each
+ * A5 line follower.
+ */
+
 #include "CLineFollower.h"
 
+//-----------------------------------------------------------------------------
 CLineFollower::CLineFollower(
     const CMap& arLineMap )
     :
@@ -12,12 +20,16 @@ CLineFollower::CLineFollower(
         mSideSensorOffset );
 }
 
+//-----------------------------------------------------------------------------
 void CLineFollower::Update( float aDt )
 {
     Steer();
-    Move( aDt );
+
+    Move(
+        aDt );
 }
 
+//-----------------------------------------------------------------------------
 void CLineFollower::Steer()
 {
     bool LineSensorOn =
@@ -36,10 +48,9 @@ void CLineFollower::Steer()
     float RightSpeed =
         mBaseSpeed;
 
+    // Normal tracking has the main sensor over the line and side sensor off it.
     if( LineSensorOn && !SideSensorOn )
     {
-        // Desired state: the main sensor is over the line while the
-        // side sensor remains beside it.
         LeftSpeed =
             mBaseSpeed;
 
@@ -48,7 +59,7 @@ void CLineFollower::Steer()
     }
     else if( !LineSensorOn && SideSensorOn )
     {
-        // The line has moved towards the right-side sensor, so steer right.
+        // The line has moved toward the side sensor, so steer right.
         LeftSpeed =
             mBaseSpeed + mTurnAmount;
 
@@ -57,8 +68,8 @@ void CLineFollower::Steer()
     }
     else if( !LineSensorOn && !SideSensorOn )
     {
-        // Both sensors are off the line on the same side, so steer left
-        // to recover the desired sensor arrangement.
+        // Neither sensor sees the line, so steer back toward the main sensor's
+        // normal tracking position.
         LeftSpeed =
             mBaseSpeed - mTurnAmount;
 
@@ -67,8 +78,8 @@ void CLineFollower::Steer()
     }
     else
     {
-        // Both sensors are over the line. Continue forward until the
-        // normal one-on/one-off arrangement is recovered.
+        // When both sensors overlap the line, continue forward until the
+        // geometry produces an unambiguous correction.
         LeftSpeed =
             mBaseSpeed;
 

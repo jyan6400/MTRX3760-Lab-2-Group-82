@@ -1,9 +1,19 @@
+/*
+ * CSimulation.cpp
+ *
+ * This file implements the A5 noise experiment. It constructs twenty robots
+ * of each type with random starting poses, enables independent wheel-travel
+ * noise, updates all robots together, renders their trajectories and supports
+ * on-demand screenshot capture.
+ */
+
 #include "CSimulation.h"
 
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
 
+//-----------------------------------------------------------------------------
 CSimulation::CSimulation(
     const std::string& aWallMapFilename,
     const std::string& aLineMapFilename )
@@ -11,7 +21,8 @@ CSimulation::CSimulation(
         mWallMap(),
         mLineMap()
 {
-    // Seed the random-number generator once for the whole simulation.
+    // Seed once so each simulation run produces a different set of starting
+    // conditions and wheel perturbations.
     std::srand(
         unsigned( std::time( 0 ) ) );
 
@@ -29,8 +40,8 @@ CSimulation::CSimulation(
 
     if( mMapsLoaded )
     {
-        // Reserving first prevents unnecessary vector reallocations while
-        // constructing the fixed set of 20 robots of each type.
+        // Reserving the known number of robots avoids unnecessary vector
+        // reallocations while the simulation population is constructed.
         mWallFollowers.reserve(
             mRobotCount );
 
@@ -51,7 +62,6 @@ CSimulation::CSimulation(
 
             mWallFollowers.push_back(
                 WallRobot );
-
 
             CLineFollower LineRobot(
                 mLineMap );
@@ -75,6 +85,7 @@ CSimulation::CSimulation(
     }
 }
 
+//-----------------------------------------------------------------------------
 float CSimulation::RandomOffset(
     float aMagnitude ) const
 {
@@ -89,12 +100,14 @@ float CSimulation::RandomOffset(
     return Offset;
 }
 
+//-----------------------------------------------------------------------------
 CPose CSimulation::MakeNoisyPose(
     const CPose& aBasePose ) const
 {
     CPose NoisyPose =
         aBasePose;
 
+    // Position and orientation perturbations are independent for every robot.
     NoisyPose.mPosition.x +=
         RandomOffset(
             mStartPositionNoise );
@@ -110,6 +123,7 @@ CPose CSimulation::MakeNoisyPose(
     return NoisyPose;
 }
 
+//-----------------------------------------------------------------------------
 void CSimulation::Run()
 {
     if( mMapsLoaded )
@@ -120,6 +134,18 @@ void CSimulation::Run()
                 mFixedDt );
 
             Render();
+
+            // Press S after most trajectories have completed the circuit to
+            // capture the spread required as evidence for the A5 report.
+            if( mRender.ScreenshotRequested() )
+            {
+                mRender.SaveScreenshot(
+                    "A5_NoiseSimulation_Final.png" );
+
+                std::cout
+                    << "Screenshot saved as A5_NoiseSimulation_Final.png"
+                    << std::endl;
+            }
         }
     }
 
@@ -128,18 +154,18 @@ void CSimulation::Run()
     Report();
 }
 
-void CSimulation::Update(
-    float aDt )
+//-----------------------------------------------------------------------------
+void CSimulation::Update( float aDt )
 {
-    for( CWallFollower& Robot :
-         mWallFollowers )
+    // Every robot receives one update per simulation cycle using the same fixed
+    // simulated timestep, while its wheel perturbations remain independent.
+    for( CWallFollower& Robot : mWallFollowers )
     {
         Robot.Update(
             aDt );
     }
 
-    for( CLineFollower& Robot :
-         mLineFollowers )
+    for( CLineFollower& Robot : mLineFollowers )
     {
         Robot.Update(
             aDt );
@@ -148,6 +174,7 @@ void CSimulation::Update(
     ++mTotalUpdates;
 }
 
+//-----------------------------------------------------------------------------
 void CSimulation::Render()
 {
     mRender.BeginDrawing();
@@ -162,15 +189,13 @@ void CSimulation::Render()
         CRender::COLOUR_GREY,
         mLineThickness );
 
-    for( CWallFollower& Robot :
-         mWallFollowers )
+    for( CWallFollower& Robot : mWallFollowers )
     {
         Robot.Draw(
             mRender );
     }
 
-    for( CLineFollower& Robot :
-         mLineFollowers )
+    for( CLineFollower& Robot : mLineFollowers )
     {
         Robot.Draw(
             mRender );
@@ -179,6 +204,7 @@ void CSimulation::Render()
     mRender.EndDrawing();
 }
 
+//-----------------------------------------------------------------------------
 void CSimulation::Report() const
 {
     std::cout
