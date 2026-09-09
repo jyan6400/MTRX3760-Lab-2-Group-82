@@ -1,11 +1,20 @@
+/*
+ * CMap.cpp
+ *
+ * This file implements generic segment construction, collision detection,
+ * ray intersection, floor-line sensing and rendering for CMap.
+ */
+
 #include "CMap.h"
 
 #include <cmath>
 
+//-----------------------------------------------------------------------------
 bool CMap::Load( const std::string& aFilename )
 {
     bool Okay =
-        mLoopReader.ReadFile( aFilename );
+        mLoopReader.ReadFile(
+            aFilename );
 
     if( Okay )
     {
@@ -15,6 +24,7 @@ bool CMap::Load( const std::string& aFilename )
     return Okay;
 }
 
+//-----------------------------------------------------------------------------
 void CMap::BuildSegments()
 {
     mSegments.clear();
@@ -24,6 +34,8 @@ void CMap::BuildSegments()
 
     if( !Vertices.empty() )
     {
+        // Starting with the final vertex automatically closes the loop between
+        // the last and first supplied vertices.
         Vec2D Previous =
             Vertices.back();
 
@@ -38,11 +50,13 @@ void CMap::BuildSegments()
     }
 }
 
+//-----------------------------------------------------------------------------
 const CPose& CMap::GetStartPose() const
 {
     return mLoopReader.GetStartPose();
 }
 
+//-----------------------------------------------------------------------------
 float CMap::PointToSegmentDistance(
     const Vec2D& aPoint,
     const Vec2D& aStart,
@@ -62,42 +76,47 @@ float CMap::PointToSegmentDistance(
 
     if( LengthSquare > 0.0f )
     {
+        // Project the point onto the infinite line containing the segment.
         T =
             ( ( aPoint.x - aStart.x ) * Dx
             + ( aPoint.y - aStart.y ) * Dy )
             / LengthSquare;
 
+        // Clamp the projection to the finite segment endpoints.
         if( T < 0.0f )
         {
-            T = 0.0f;
+            T =
+                0.0f;
         }
 
         if( T > 1.0f )
         {
-            T = 1.0f;
+            T =
+                1.0f;
         }
     }
 
-    float ClosestX =
-        aStart.x + T * Dx;
+    Vec2D ClosestPoint
+    {
+        aStart.x + T * Dx,
+        aStart.y + T * Dy
+    };
 
-    float ClosestY =
-        aStart.y + T * Dy;
+    float PointDx =
+        aPoint.x - ClosestPoint.x;
 
-    float Ddx =
-        aPoint.x - ClosestX;
-
-    float Ddy =
-        aPoint.y - ClosestY;
+    float PointDy =
+        aPoint.y - ClosestPoint.y;
 
     float Distance =
         std::sqrt(
-            Ddx * Ddx
-            + Ddy * Ddy );
+            PointDx * PointDx
+            + PointDy * PointDy );
 
     return Distance;
 }
 
+//-----------------------------------------------------------------------------
 bool CMap::CheckCollision(
     const Vec2D& aPosition,
     float aRadius ) const
@@ -105,12 +124,12 @@ bool CMap::CheckCollision(
     bool Collided =
         false;
 
-    for( const Segment& S : mSegments )
+    for( const Segment& CurrentSegment : mSegments )
     {
         if( PointToSegmentDistance(
                 aPosition,
-                S.mStart,
-                S.mEnd ) < aRadius )
+                CurrentSegment.mStart,
+                CurrentSegment.mEnd ) < aRadius )
         {
             Collided =
                 true;
@@ -120,6 +139,7 @@ bool CMap::CheckCollision(
     return Collided;
 }
 
+//-----------------------------------------------------------------------------
 float CMap::GetRayIntersection(
     const Vec2D& aStartPosition,
     float aRayAngle ) const
@@ -133,38 +153,42 @@ float CMap::GetRayIntersection(
         std::sin( aRayAngle )
     };
 
-    for( const Segment& S : mSegments )
+    for( const Segment& CurrentSegment : mSegments )
     {
-        float Sx =
-            S.mEnd.x - S.mStart.x;
+        float SegmentX =
+            CurrentSegment.mEnd.x
+            - CurrentSegment.mStart.x;
 
-        float Sy =
-            S.mEnd.y - S.mStart.y;
+        float SegmentY =
+            CurrentSegment.mEnd.y
+            - CurrentSegment.mStart.y;
 
+        // A near-zero cross product means the ray and segment are parallel.
         float Denominator =
-            Direction.x * Sy
-            - Direction.y * Sx;
+            Direction.x * SegmentY
+            - Direction.y * SegmentX;
 
         if( std::fabs( Denominator ) > mParallelTolerance )
         {
-            float Ex =
-                S.mStart.x
+            float OffsetX =
+                CurrentSegment.mStart.x
                 - aStartPosition.x;
 
-            float Ey =
-                S.mStart.y
+            float OffsetY =
+                CurrentSegment.mStart.y
                 - aStartPosition.y;
 
-            // T is distance along the ray.
+            // T gives distance forward along the ray.
             float T =
-                ( Ex * Sy
-                - Ey * Sx )
+                ( OffsetX * SegmentY
+                - OffsetY * SegmentX )
                 / Denominator;
 
-            // U identifies the position along the finite map segment.
+            // U gives the position along the finite segment. Only values from
+            // zero to one lie between the two segment endpoints.
             float U =
-                ( Ex * Direction.y
-                - Ey * Direction.x )
+                ( OffsetX * Direction.y
+                - OffsetY * Direction.x )
                 / Denominator;
 
             if( T >= 0.0f
@@ -181,21 +205,21 @@ float CMap::GetRayIntersection(
     return ClosestDistance;
 }
 
+//-----------------------------------------------------------------------------
 bool CMap::IsPointOnLine(
     const Vec2D& aPoint ) const
 {
     bool OnLine =
         false;
 
-    for( const Segment& S : mSegments )
+    // The line is exactly five units wide, so a sensor is on the line whenever
+    // its point lies no more than 2.5 units from a centre segment.
+    for( const Segment& CurrentSegment : mSegments )
     {
-        float Distance =
-            PointToSegmentDistance(
+        if( PointToSegmentDistance(
                 aPoint,
-                S.mStart,
-                S.mEnd );
-
-        if( Distance <= mLineHalfWidth )
+                CurrentSegment.mStart,
+                CurrentSegment.mEnd ) <= mLineHalfWidth )
         {
             OnLine =
                 true;
@@ -205,16 +229,17 @@ bool CMap::IsPointOnLine(
     return OnLine;
 }
 
+//-----------------------------------------------------------------------------
 void CMap::Draw(
     CRender& aRender,
     CRender::EColour aColour,
     float aThickness ) const
 {
-    for( const Segment& S : mSegments )
+    for( const Segment& CurrentSegment : mSegments )
     {
         aRender.DrawLine(
-            S.mStart,
-            S.mEnd,
+            CurrentSegment.mStart,
+            CurrentSegment.mEnd,
             aThickness,
             aColour );
     }

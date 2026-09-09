@@ -1,14 +1,24 @@
+/*
+ * CLineSensor.cpp
+ *
+ * This file implements CLineSensor by transforming its robot-local mounting
+ * position into world coordinates before querying the line map.
+ */
+
 #include "CLineSensor.h"
 
 #include "CMap.h"
 
 #include <cmath>
 
+//-----------------------------------------------------------------------------
 void CLineSensor::Mount( const Vec2D& aOffset )
 {
-    mOffset = aOffset;
+    mOffset =
+        aOffset;
 }
 
+//-----------------------------------------------------------------------------
 bool CLineSensor::IsOnLine(
     const CPose& aRobotPose,
     const CMap& aMap ) const
@@ -19,8 +29,8 @@ bool CLineSensor::IsOnLine(
     float SinHeading =
         std::sin( aRobotPose.mHeading );
 
-    // Transform the sensor's robot-relative mounting position into
-    // world coordinates.
+    // Rotate the local sensor offset by the robot heading and then translate
+    // it by the robot position to obtain the sensor position in world space.
     Vec2D SensorPosition
     {
         aRobotPose.mPosition.x
@@ -33,7 +43,8 @@ bool CLineSensor::IsOnLine(
     };
 
     bool OnLine =
-        aMap.IsPointOnLine( SensorPosition );
+        aMap.IsPointOnLine(
+            SensorPosition );
 
     return OnLine;
 }

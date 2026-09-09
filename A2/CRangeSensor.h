@@ -1,3 +1,11 @@
+/*
+ * CRangeSensor.h
+ *
+ * This file declares CRangeSensor, which models a range sensor mounted at a
+ * fixed angular offset from a robot and reports the distance to the first map
+ * segment intersected by its sensing ray.
+ */
+
 #ifndef CRANGESENSOR_H
 #define CRANGESENSOR_H
 
@@ -5,22 +13,31 @@
 
 class CMap;
 
-// CRangeSensor models one range sensor mounted at a fixed angular offset from
-// the robot heading. It reports the distance to the first wall its ray meets.
+//-----------------------------------------------------------------------------
+// CRangeSensor
+//
+// CRangeSensor represents one robot-mounted range sensor. Its mounting angle
+// is stored relative to the robot heading. When queried, it converts this to a
+// world-space ray and asks CMap for the first segment intersection.
+//-----------------------------------------------------------------------------
 class CRangeSensor
 {
     public:
-        // Sets the mounting angle relative to the robot heading.
+
+        // Sets the sensor mounting angle relative to the robot heading.
+        // aAngleOffset is specified in radians.
         void Mount( float aAngleOffset );
 
-        // Returns the distance from the robot to the first wall hit by the
-        // sensor ray.
+        // Returns the distance from the robot position to the nearest map
+        // segment intersected by this sensor's forward ray.
         float GetDistance(
             const Vec2D& aRobotPosition,
             float aRobotHeading,
             const CMap& aMap ) const;
 
     private:
+
+        // Angular offset from the robot heading, in radians.
         float mAngleOffset{ 0.0f };
 };
 

@@ -1,3 +1,10 @@
+/*
+ * CWallFollower.h
+ *
+ * This file declares CWallFollower, a specialised CRobot that follows the
+ * wall on its right-hand side using exactly two range sensors.
+ */
+
 #ifndef CWALLFOLLOWER_H
 #define CWALLFOLLOWER_H
 
@@ -5,24 +12,34 @@
 #include "CRangeSensor.h"
 #include "CRobot.h"
 
-// CWallFollower is a CRobot that follows the wall on its right. It uses one
-// right-facing and one forward-right range sensor to calculate differential
-// wheel speeds and counts wall-collision events.
+//-----------------------------------------------------------------------------
+// CWallFollower
+//
+// CWallFollower controls a robot using one right-facing and one forward-right
+// range sensor. It converts their measurements into differential wheel speeds
+// and records separate wall-collision events.
+//
+// The map is stored by reference because CSimulation owns it for the complete
+// lifetime of the wall follower.
+//-----------------------------------------------------------------------------
 class CWallFollower : public CRobot
 {
     public:
-        // Creates a wall follower that senses and checks collisions against
-        // the supplied map.
+
+        // Constructs a wall follower that senses and checks collisions against
+        // arMap. The supplied map must outlive the robot.
         CWallFollower( const CMap& arMap );
 
-        // Performs sensing/control, movement and collision detection.
+        // Performs one wall-follower sensing/control step, moves the robot and
+        // then checks for a new collision event.
         void Update( float aDt );
 
-        // Returns the number of separate wall-collision events.
+        // Returns the number of separate wall-collision events detected.
         int GetCollisionCount() const;
 
     private:
-        // Named sensor indices make the two required sensor roles explicit.
+
+        // Named indices describe the roles of the two required range sensors.
         enum ESensor
         {
             SENSOR_RIGHT = 0,
@@ -30,31 +47,42 @@ class CWallFollower : public CRobot
             NUM_SENSORS
         };
 
-        // Calculates wheel commands from the two range sensor readings.
+        // Reads the two sensors and converts the measurements into wheel
+        // commands.
         void Steer();
 
-        // Detects and counts the start of each wall-collision event.
+        // Counts the beginning of each continuous wall-contact event once.
         void CheckCollision();
 
-        // The wall follower knows the map but does not own it.
+        // Non-owning reference to the wall map.
         const CMap& mMap;
 
+        // Exactly two range sensors are owned by the wall follower.
         CRangeSensor mSensors[NUM_SENSORS];
 
-        // Required range-sensor mounting angles, in radians.
+        // Required mounting directions, stored in radians.
         const float mRightSensorAngle{ 1.57079633f };
         const float mForwardRightSensorAngle{ 0.78539816f };
 
-        // Wall-following controller constants.
+        // Nominal forward wheel speed.
         const float mBaseSpeed{ 80.0f };
+
+        // Desired distance from the right-hand wall.
         const float mTargetWallDistance{ 60.0f };
+
+        // Proportional correction gain for wall-distance error.
         const float mKp{ 0.6f };
+
+        // Additional turn gain used when approaching a corner.
         const float mKTurn{ 0.8f };
+
+        // Forward-right range below which stronger corner avoidance begins.
         const float mForwardRightThreshold{ 80.0f };
 
+        // Number of separate collision events detected.
         int mCollisionCount{ 0 };
 
-        // Prevents one continuous contact from being counted every update.
+        // Indicates whether the previous update was already in wall contact.
         bool mWasColliding{ false };
 };
 

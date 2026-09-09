@@ -1,7 +1,15 @@
+/*
+ * CSimulation.cpp
+ *
+ * This file implements construction, simultaneous fixed-timestep execution,
+ * rendering, screenshot capture and final reporting for the A2 simulation.
+ */
+
 #include "CSimulation.h"
 
 #include <iostream>
 
+//-----------------------------------------------------------------------------
 CSimulation::CSimulation(
     const std::string& aWallMapFilename,
     const std::string& aLineMapFilename )
@@ -23,19 +31,15 @@ CSimulation::CSimulation(
         WallMapLoaded
         && LineMapLoaded;
 
-    if( WallMapLoaded )
+    if( mMapsLoaded )
     {
         mWallFollower.SetPose(
             mWallMap.GetStartPose() );
-    }
 
-    if( LineMapLoaded )
-    {
         mLineFollower.SetPose(
             mLineMap.GetStartPose() );
     }
-
-    if( !mMapsLoaded )
+    else
     {
         std::cout
             << "CSimulation: failed to load one or more maps"
@@ -43,16 +47,30 @@ CSimulation::CSimulation(
     }
 }
 
+//-----------------------------------------------------------------------------
 void CSimulation::Run()
 {
     if( mMapsLoaded )
     {
+        // Both robots receive exactly the same fixed amount of simulated time
+        // during every logical update.
         while( !mRender.WindowShouldClose() )
         {
             Update(
                 mFixedDt );
 
             Render();
+
+            // Press S once both permanent trails show complete circuits.
+            if( mRender.ScreenshotRequested() )
+            {
+                mRender.SaveScreenshot(
+                    "A2_RobotSimulator_Final.png" );
+
+                std::cout
+                    << "Screenshot saved as A2_RobotSimulator_Final.png"
+                    << std::endl;
+            }
         }
     }
 
@@ -61,9 +79,10 @@ void CSimulation::Run()
     Report();
 }
 
-void CSimulation::Update(
-    float aDt )
+//-----------------------------------------------------------------------------
+void CSimulation::Update( float aDt )
 {
+    // The two robots are updated independently and do not interact.
     mWallFollower.Update(
         aDt );
 
@@ -73,23 +92,23 @@ void CSimulation::Update(
     ++mTotalUpdates;
 }
 
+//-----------------------------------------------------------------------------
 void CSimulation::Render()
 {
     mRender.BeginDrawing();
 
-    // Draw the room walls.
+    // The wall is drawn as a narrow white boundary and the line as an exactly
+    // five-unit-wide grey floor marking.
     mWallMap.Draw(
         mRender,
         CRender::COLOUR_WHITE,
         mWallThickness );
 
-    // Draw the 5-unit-wide floor line.
     mLineMap.Draw(
         mRender,
         CRender::COLOUR_GREY,
         mLineThickness );
 
-    // Draw both robots and their permanent trails.
     mWallFollower.Draw(
         mRender );
 
@@ -99,6 +118,7 @@ void CSimulation::Render()
     mRender.EndDrawing();
 }
 
+//-----------------------------------------------------------------------------
 void CSimulation::Report() const
 {
     std::cout

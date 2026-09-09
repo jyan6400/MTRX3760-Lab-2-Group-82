@@ -1,7 +1,16 @@
+/*
+ * CRender.cpp
+ *
+ * This file implements the A2 graphics and input wrapper. It is intentionally
+ * the only source file that includes raylib.h or directly accesses raylib
+ * types, constants and functions.
+ */
+
 #include "CRender.h"
 
 #include "raylib.h"
 
+//-----------------------------------------------------------------------------
 CRender::CRender()
     :
         mScreenWidth( 800 ),
@@ -12,19 +21,23 @@ CRender::CRender()
         mScreenHeight,
         "MTRX3760 Lab 2 - Wall and Line Followers" );
 
-    ::SetTargetFPS( 60 );
+    ::SetTargetFPS(
+        60 );
 }
 
+//-----------------------------------------------------------------------------
 int CRender::GetScreenWidth() const
 {
     return mScreenWidth;
 }
 
+//-----------------------------------------------------------------------------
 int CRender::GetScreenHeight() const
 {
     return mScreenHeight;
 }
 
+//-----------------------------------------------------------------------------
 bool CRender::WindowShouldClose()
 {
     bool Result =
@@ -33,26 +46,49 @@ bool CRender::WindowShouldClose()
     return Result;
 }
 
+//-----------------------------------------------------------------------------
+bool CRender::ScreenshotRequested() const
+{
+    // Keep the raylib key constant behind the CRender abstraction.
+    bool Result =
+        ::IsKeyPressed( KEY_S );
+
+    return Result;
+}
+
+//-----------------------------------------------------------------------------
+void CRender::SaveScreenshot(
+    const char* aFilename ) const
+{
+    ::TakeScreenshot(
+        aFilename );
+}
+
+//-----------------------------------------------------------------------------
 void CRender::CloseWindow()
 {
     ::CloseWindow();
 }
 
+//-----------------------------------------------------------------------------
 void CRender::BeginDrawing()
 {
     ::BeginDrawing();
-    ::ClearBackground( BLACK );
+
+    ::ClearBackground(
+        BLACK );
 }
 
+//-----------------------------------------------------------------------------
 void CRender::EndDrawing()
 {
     ::EndDrawing();
 }
 
+//-----------------------------------------------------------------------------
 CRender::SColourComponents CRender::GetColourComponents(
     EColour aColour ) const
 {
-    // White is the default.
     SColourComponents Result
     {
         255,
@@ -87,13 +123,16 @@ CRender::SColourComponents CRender::GetColourComponents(
     return Result;
 }
 
+//-----------------------------------------------------------------------------
 void CRender::DrawCircle(
     Vec2D aPosition,
     int aRadius,
     EColour aColour )
 {
+    // Translation to raylib-owned types occurs only at this wrapper boundary.
     SColourComponents Components =
-        GetColourComponents( aColour );
+        GetColourComponents(
+            aColour );
 
     Color RayColour
     {
@@ -110,6 +149,7 @@ void CRender::DrawCircle(
         RayColour );
 }
 
+//-----------------------------------------------------------------------------
 void CRender::DrawLine(
     Vec2D aStart,
     Vec2D aEnd,
@@ -117,7 +157,8 @@ void CRender::DrawLine(
     EColour aColour )
 {
     SColourComponents Components =
-        GetColourComponents( aColour );
+        GetColourComponents(
+            aColour );
 
     Color RayColour
     {

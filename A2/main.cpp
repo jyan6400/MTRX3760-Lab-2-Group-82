@@ -1,12 +1,18 @@
-// main.cpp
-//
-// Entry point for A2. Runs the wall-following and line-following robots
-// simultaneously using their supplied test maps.
+/*
+ * main.cpp
+ *
+ * This file provides the entry point for the A2 robot simulator. It constructs
+ * CSimulation using the supplied wall and line maps and starts both robots
+ * running simultaneously.
+ */
 
 #include "CSimulation.h"
 
+//-----------------------------------------------------------------------------
 int main()
 {
+    // All simulation behaviour remains encapsulated within CSimulation rather
+    // than being implemented directly in main().
     CSimulation Simulation(
         "SimpleWalls.map",
         "SimpleLine.map" );
