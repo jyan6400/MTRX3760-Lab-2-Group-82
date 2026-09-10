@@ -1,38 +1,31 @@
 /*
  * CRender.h
  *
- * This file declares the graphics wrapper used by the simulator. It provides a
- * small C++ drawing and input interface while keeping raylib-specific types,
- * constants and functions hidden from the rest of the program.
+ * This file declares CRender, which provides the graphics interface used by
+ * the simulator while hiding all raylib-specific types and functions.
  */
 
 #ifndef CRENDER_H
 #define CRENDER_H
 
+
 //-----------------------------------------------------------------------------
-// Vec2D
-//
-// Vec2D represents a simple two-dimensional coordinate used throughout the
-// simulator without exposing raylib's Vector2 type.
-//-----------------------------------------------------------------------------
+// A simple two-dimensional vector used throughout the simulator.
 struct Vec2D
 {
     float x;
     float y;
 };
 
+
 //-----------------------------------------------------------------------------
-// CRender
-//
-// CRender provides the simulator graphics and simple input interface. Other
-// classes request drawing, key and screenshot operations using simulator-owned
-// types, while CRender.cpp performs all direct interaction with raylib.
-//-----------------------------------------------------------------------------
+// CRender provides drawing, window and screenshot operations without exposing
+// raylib-specific types to the rest of the simulator.
 class CRender
 {
     public:
 
-        // Colours exposed by the simulator graphics interface.
+        // Colours required by the simulator.
         enum EColour
         {
             COLOUR_WHITE,
@@ -40,63 +33,46 @@ class CRender
             COLOUR_GREY
         };
 
-        // Creates the simulator window and configures its target frame rate.
         CRender();
 
-        // Returns true when the graphics window has been requested to close.
-        bool WindowShouldClose();
+        // Returns true when the user requests that the window be closed.
+        bool WindowShouldClose() const;
 
-        // Returns true once when the user presses the S key.
-        bool ScreenshotRequested() const;
+        // Begins a new frame and clears the previous frame.
+        void BeginDrawing() const;
 
-        // Saves the current graphics window contents to a PNG file.
-        void SaveScreenshot( const char* aFilename ) const;
+        // Completes the current frame.
+        void EndDrawing() const;
 
         // Closes the graphics window.
-        void CloseWindow();
+        void CloseWindow() const;
 
-        // Begins a new rendered frame and clears the previous image.
-        void BeginDrawing();
-
-        // Finishes the current rendered frame.
-        void EndDrawing();
-
-        // Draws a filled circle using simulator coordinates and colours.
+        // Draws a filled circle at the supplied simulator position.
         void DrawCircle(
-            Vec2D aPosition,
-            int aRadius,
-            EColour aColour );
+            const Vec2D& aCentre,
+            float aRadius,
+            EColour aColour ) const;
 
-        // Draws a straight line between two simulator coordinates.
+        // Draws a line of the supplied thickness between two positions.
         void DrawLine(
-            Vec2D aStart,
-            Vec2D aEnd,
+            const Vec2D& aStart,
+            const Vec2D& aEnd,
             float aThickness,
-            EColour aColour );
+            EColour aColour ) const;
 
-        // Returns the configured window dimensions.
-        int GetScreenWidth() const;
-        int GetScreenHeight() const;
+        // Returns true once when the screenshot key is pressed.
+        bool ScreenshotRequested() const;
+
+        // Saves the current window contents to the supplied filename.
+        void SaveScreenshot( const char* aFilename ) const;
 
     private:
 
-        // Internal colour representation prevents raylib's Color type from
-        // appearing in this public header.
-        struct SColourComponents
-        {
-            unsigned char r;
-            unsigned char g;
-            unsigned char b;
-            unsigned char a;
-        };
-
-        // Converts a simulator colour into RGBA components for raylib.
-        SColourComponents GetColourComponents(
-            EColour aColour ) const;
-
-        // Fixed dimensions of the simulator window.
-        const int mScreenWidth;
-        const int mScreenHeight;
+        // Window configuration.
+        const int mScreenWidth{ 800 };
+        const int mScreenHeight{ 600 };
+        const int mTargetFramesPerSecond{ 60 };
 };
+
 
 #endif

@@ -1,36 +1,31 @@
 /*
  * CRender.h
  *
- * This file declares the graphics and simple input wrapper used by the A5
- * simulator. It exposes simulator-specific drawing and screenshot operations
- * while keeping all raylib-specific types and constants hidden.
+ * This file declares CRender, which provides the graphics interface used by
+ * the simulator while hiding all raylib-specific types and functions.
  */
 
 #ifndef CRENDER_H
 #define CRENDER_H
 
+
 //-----------------------------------------------------------------------------
-// Vec2D
-//
-// Vec2D represents a two-dimensional coordinate used throughout the simulator
-// without exposing raylib's Vector2 type.
-//-----------------------------------------------------------------------------
+// A simple two-dimensional vector used throughout the simulator.
 struct Vec2D
 {
     float x;
     float y;
 };
 
+
 //-----------------------------------------------------------------------------
-// CRender
-//
-// CRender forms the graphics and input boundary of the simulator. CRender.cpp
-// is the only source file that directly accesses raylib.
-//-----------------------------------------------------------------------------
+// CRender provides drawing, window and screenshot operations without exposing
+// raylib-specific types to the rest of the simulator.
 class CRender
 {
     public:
 
+        // Colours required by the simulator.
         enum EColour
         {
             COLOUR_WHITE,
@@ -38,62 +33,46 @@ class CRender
             COLOUR_GREY
         };
 
-        // Creates the A5 simulation window.
         CRender();
 
-        // Returns true when the user requests that the window close.
-        bool WindowShouldClose();
+        // Returns true when the user requests that the window be closed.
+        bool WindowShouldClose() const;
 
-        // Returns true once when the user presses S.
-        bool ScreenshotRequested() const;
+        // Begins a new frame and clears the previous frame.
+        void BeginDrawing() const;
 
-        // Saves the current framebuffer to the named PNG file.
-        void SaveScreenshot(
-            const char* aFilename ) const;
+        // Completes the current frame.
+        void EndDrawing() const;
 
         // Closes the graphics window.
-        void CloseWindow();
+        void CloseWindow() const;
 
-        // Begins and clears a rendered frame.
-        void BeginDrawing();
-
-        // Finishes the current rendered frame.
-        void EndDrawing();
-
-        // Draws a filled circle.
+        // Draws a filled circle at the supplied simulator position.
         void DrawCircle(
-            Vec2D aPosition,
-            int aRadius,
-            EColour aColour );
+            const Vec2D& aCentre,
+            float aRadius,
+            EColour aColour ) const;
 
-        // Draws a straight line segment.
+        // Draws a line of the supplied thickness between two positions.
         void DrawLine(
-            Vec2D aStart,
-            Vec2D aEnd,
+            const Vec2D& aStart,
+            const Vec2D& aEnd,
             float aThickness,
-            EColour aColour );
+            EColour aColour ) const;
 
-        // Returns the configured window dimensions.
-        int GetScreenWidth() const;
-        int GetScreenHeight() const;
+        // Returns true once when the screenshot key is pressed.
+        bool ScreenshotRequested() const;
+
+        // Saves the current window contents to the supplied filename.
+        void SaveScreenshot( const char* aFilename ) const;
 
     private:
 
-        // Simulator-owned representation avoids exposing raylib's Color type.
-        struct SColourComponents
-        {
-            unsigned char r;
-            unsigned char g;
-            unsigned char b;
-            unsigned char a;
-        };
-
-        // Converts an exposed simulator colour into RGBA components.
-        SColourComponents GetColourComponents(
-            EColour aColour ) const;
-
-        const int mScreenWidth;
-        const int mScreenHeight;
+        // Window configuration.
+        const int mScreenWidth{ 800 };
+        const int mScreenHeight{ 600 };
+        const int mTargetFramesPerSecond{ 60 };
 };
+
 
 #endif

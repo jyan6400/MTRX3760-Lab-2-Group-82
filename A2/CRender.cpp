@@ -1,180 +1,146 @@
 /*
  * CRender.cpp
  *
- * This file implements the A2 graphics and input wrapper. It is intentionally
- * the only source file that includes raylib.h or directly accesses raylib
- * types, constants and functions.
+ * This file implements the graphics, window and screenshot operations provided
+ * by CRender. All direct interaction with raylib is contained in this file.
  */
 
 #include "CRender.h"
 
-#include "raylib.h"
+#include <raylib.h>
+
 
 //-----------------------------------------------------------------------------
 CRender::CRender()
-    :
-        mScreenWidth( 800 ),
-        mScreenHeight( 600 )
 {
     ::InitWindow(
         mScreenWidth,
         mScreenHeight,
         "MTRX3760 Lab 2 - Wall and Line Followers" );
 
-    ::SetTargetFPS(
-        60 );
+    ::SetTargetFPS( mTargetFramesPerSecond );
 }
 
-//-----------------------------------------------------------------------------
-int CRender::GetScreenWidth() const
-{
-    return mScreenWidth;
-}
 
 //-----------------------------------------------------------------------------
-int CRender::GetScreenHeight() const
+bool CRender::WindowShouldClose() const
 {
-    return mScreenHeight;
-}
-
-//-----------------------------------------------------------------------------
-bool CRender::WindowShouldClose()
-{
-    bool Result =
+    bool ShouldClose =
         ::WindowShouldClose();
 
-    return Result;
+    return ShouldClose;
 }
 
-//-----------------------------------------------------------------------------
-bool CRender::ScreenshotRequested() const
-{
-    // Keep the raylib key constant behind the CRender abstraction.
-    bool Result =
-        ::IsKeyPressed( KEY_S );
-
-    return Result;
-}
 
 //-----------------------------------------------------------------------------
-void CRender::SaveScreenshot(
-    const char* aFilename ) const
-{
-    ::TakeScreenshot(
-        aFilename );
-}
-
-//-----------------------------------------------------------------------------
-void CRender::CloseWindow()
-{
-    ::CloseWindow();
-}
-
-//-----------------------------------------------------------------------------
-void CRender::BeginDrawing()
+void CRender::BeginDrawing() const
 {
     ::BeginDrawing();
 
-    ::ClearBackground(
-        BLACK );
+    // Persistent robot paths are stored explicitly by CTrail, so the display
+    // can be cleared safely at the beginning of every rendered frame.
+    ::ClearBackground( BLACK );
 }
 
+
 //-----------------------------------------------------------------------------
-void CRender::EndDrawing()
+void CRender::EndDrawing() const
 {
     ::EndDrawing();
 }
 
+
 //-----------------------------------------------------------------------------
-CRender::SColourComponents CRender::GetColourComponents(
-    EColour aColour ) const
+void CRender::CloseWindow() const
 {
-    SColourComponents Result
-    {
-        255,
-        255,
-        255,
-        255
-    };
-
-    if( aColour == COLOUR_BLUE )
-    {
-        Result =
-            SColourComponents
-            {
-                0,
-                121,
-                241,
-                255
-            };
-    }
-    else if( aColour == COLOUR_GREY )
-    {
-        Result =
-            SColourComponents
-            {
-                130,
-                130,
-                130,
-                255
-            };
-    }
-
-    return Result;
+    ::CloseWindow();
 }
+
 
 //-----------------------------------------------------------------------------
 void CRender::DrawCircle(
-    Vec2D aPosition,
-    int aRadius,
-    EColour aColour )
+    const Vec2D& aCentre,
+    float aRadius,
+    EColour aColour ) const
 {
-    // Translation to raylib-owned types occurs only at this wrapper boundary.
-    SColourComponents Components =
-        GetColourComponents(
-            aColour );
+    Color RayColour =
+        WHITE;
 
-    Color RayColour
+    // Convert simulator colours to raylib colours only inside the rendering
+    // wrapper so raylib-specific types do not escape into the simulator.
+    switch( aColour )
     {
-        Components.r,
-        Components.g,
-        Components.b,
-        Components.a
+        case COLOUR_WHITE:
+        {
+            RayColour = WHITE;
+            break;
+        }
+
+        case COLOUR_BLUE:
+        {
+            RayColour = BLUE;
+            break;
+        }
+
+        case COLOUR_GREY:
+        {
+            RayColour = GRAY;
+            break;
+        }
+    }
+
+    const Vector2 Centre =
+    {
+        aCentre.x,
+        aCentre.y
     };
 
-    ::DrawCircle(
-        aPosition.x,
-        aPosition.y,
+    ::DrawCircleV(
+        Centre,
         aRadius,
         RayColour );
 }
 
+
 //-----------------------------------------------------------------------------
 void CRender::DrawLine(
-    Vec2D aStart,
-    Vec2D aEnd,
+    const Vec2D& aStart,
+    const Vec2D& aEnd,
     float aThickness,
-    EColour aColour )
+    EColour aColour ) const
 {
-    SColourComponents Components =
-        GetColourComponents(
-            aColour );
+    Color RayColour =
+        WHITE;
 
-    Color RayColour
+    // Convert the simulator colour to the corresponding raylib colour.
+    switch( aColour )
     {
-        Components.r,
-        Components.g,
-        Components.b,
-        Components.a
-    };
+        case COLOUR_WHITE:
+        {
+            RayColour = WHITE;
+            break;
+        }
 
-    Vector2 Start
+        case COLOUR_BLUE:
+        {
+            RayColour = BLUE;
+            break;
+        }
+
+        case COLOUR_GREY:
+        {
+            RayColour = GRAY;
+            break;
+        }
+    }
+
+    const Vector2 Start =
     {
         aStart.x,
         aStart.y
     };
 
-    Vector2 End
+    const Vector2 End =
     {
         aEnd.x,
         aEnd.y
@@ -185,4 +151,21 @@ void CRender::DrawLine(
         End,
         aThickness,
         RayColour );
+}
+
+
+//-----------------------------------------------------------------------------
+bool CRender::ScreenshotRequested() const
+{
+    bool Requested =
+        ::IsKeyPressed( KEY_S );
+
+    return Requested;
+}
+
+
+//-----------------------------------------------------------------------------
+void CRender::SaveScreenshot( const char* aFilename ) const
+{
+    ::TakeScreenshot( aFilename );
 }

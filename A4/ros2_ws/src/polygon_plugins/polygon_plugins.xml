@@ -1,11 +1,25 @@
 <library path="polygon_plugins">
-  <class type="polygon_plugins::Square" base_class_type="polygon_base::RegularPolygon">
-    <description>This is a square plugin.</description>
+  <class
+    type="polygon_plugins::Square"
+    base_class_type="polygon_base::RegularPolygon">
+    <description>
+      Square polygon plugin.
+    </description>
   </class>
-  <class type="polygon_plugins::Triangle" base_class_type="polygon_base::RegularPolygon">
-    <description>This is a triangle plugin.</description>
+
+  <class
+    type="polygon_plugins::Triangle"
+    base_class_type="polygon_base::RegularPolygon">
+    <description>
+      Equilateral triangle polygon plugin.
+    </description>
   </class>
-  <class type="polygon_plugins::House" base_class_type="polygon_base::RegularPolygon">
-    <description>This is a house plugin composed of a square and a triangle.</description>
+
+  <class
+    type="polygon_plugins::House"
+    base_class_type="polygon_base::RegularPolygon">
+    <description>
+      House plugin composed of a square base and triangular roof.
+    </description>
   </class>
 </library>
