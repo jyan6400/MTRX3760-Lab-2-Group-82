@@ -1,45 +1,62 @@
 @startuml
+
 skinparam classAttributeIconSize 0
 skinparam style strictuml
+
+' ============================================================
+' Classes
+' ============================================================
 
 class CSimulation
 class CRender
 class CMap
 class CLoopReader
-class CRobot
+
+abstract class CRobot
 class CWallFollower
+
 class CWheel
-class CRangeSensor
 class CTrail
+class CRangeSensor
+
+' ============================================================
+' Inheritance
+' ============================================================
 
 CRobot <|-- CWallFollower
 
-'Each update advances the simulation 
-'by a fixed amount of simulated time.
-CSimulation *-- CRender
-CSimulation *-- CMap
+' ============================================================
+' Simulation Ownership
+' ============================================================
 
-'Each time the robot collides with a wall, 
-'the collision is reported to the console.
-CSimulation *-- CWallFollower
+CSimulation "1" *-- "1" CRender
+CSimulation "1" *-- "1" CMap
+CSimulation "1" *-- "1" CWallFollower
 
-'The robot is driven by two independently 
-'controlled wheels, one either side.
+' ============================================================
+' Robot Ownership
+' ============================================================
+
 CRobot "1" *-- "2" CWheel
+CRobot "1" *-- "1" CTrail
 
-'The robot (Wallfollower is inherited from robot)
-'carries exactly two range sensors
 CWallFollower "1" *-- "2" CRangeSensor
 
-'The robot leaves a trail behind it showing its trajectory, 
-'and the trail remains visible for the whole run.
-CRobot *-- CTrail
+' ============================================================
+' Map Ownership
+' ============================================================
 
-CMap --> CLoopReader
-CWallFollower --> CMap
-CRangeSensor --> CMap
-CRobot --> CRender
-CMap --> CRender
-CTrail --> CRender
+CMap "1" *-- "1" CLoopReader
+
+' ============================================================
+' Non-Owning Relationships
+' ============================================================
+
+CWallFollower --> CMap : wall map
+CRangeSensor --> CMap : ray query
+
+CRobot --> CRender : draw robot
+CMap --> CRender : draw walls
+CTrail --> CRender : draw trail
 
 @enduml
